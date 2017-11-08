@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">StreamSavvy</string>
+    <string name="latitude_label">Latitude</string>
+    <string name="longitude_label">Longitude</string>
+    <string name="no_location_detected">
+        No location detected. Make sure permissions enabled.
+    </string>
+    <string name="permission_rationale">
+        Location permission is needed for data save.
+    </string>
+    <string name="permission_denied_explanation">
+        Permission was denied, but is needed for core functionality.
+    </string>
+    <string name="settings">Settings</string>
+    <string name="location_label">Location</string>
+    <string name="data_label">Data</string>
+    <string name="date_label">Date and Time</string>
+</resources>
