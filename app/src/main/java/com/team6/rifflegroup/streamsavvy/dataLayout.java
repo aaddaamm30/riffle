@@ -18,7 +18,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -27,7 +26,6 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
@@ -190,31 +188,30 @@ public class dataLayout extends AppCompatActivity {
 
     //function that's called by the update button which saves the file then sends it via email to me
     public void sendEmailData(View view){
-        String subject = "[RIFFLE DATA] date: ";
-        subject = subject.concat(inDate.toString());
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent.setType("text/plain");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"a.daman.loo@gmail.com"});
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
 
         //save data
         saveData(this);
 
-        //finish and send email
-        File root = Environment.getRootDirectory();
-        File file = new File(root, FILE_NAME);
-        if(!file.exists() || !file.canRead()){
-            return;
-        }
-        Uri uri = Uri.fromFile(file);
-        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
-        startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
+
+        String subject = "[RIFFLE DATA] date: ";
+        subject = subject.concat(inDate.getText().toString());
+        File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), FILE_NAME);
+        Uri path = Uri.fromFile(filelocation);
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setType("vnd.android.cursor.dir/email");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"a.daman.loo@gmail.com"});
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
+        emailIntent.putExtra(Intent.EXTRA_STREAM, path);
+
+        startActivity(Intent.createChooser(emailIntent, "Send email..."));
+
     }
 
     public void saveHolder (View view){
         saveData(this);
     }
+
     //function that saves values to a hardcoded file name
     public void saveData(Context context){
 
@@ -234,30 +231,7 @@ public class dataLayout extends AppCompatActivity {
         }catch (IOException e){
             e.printStackTrace();
         }
-        /*
-        try{
-            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
-            if(!root.exists()){
-                root.mkdirs();
-            }
-            File gpxfile = new File(root, FILE_NAME);
-            FileWriter writer = new FileWriter(gpxfile);
-            String csv = "date,";
-            csv = csv.concat(inDate.toString());
-            csv = csv.concat(",lat,");
-            csv = csv.concat(mLatitudeLabel);
-            csv = csv.concat(",long,");
-            csv = csv.concat(mLongitudeLabel);
-            csv = csv.concat(",value,");
-            csv = csv.concat(inField.toString());
-            writer.append(csv);
-            writer.flush();
-            writer.close();
-            showSnackbar(csv);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        */
+
     }
 
 }
