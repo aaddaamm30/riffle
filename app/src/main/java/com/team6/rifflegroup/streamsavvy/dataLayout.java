@@ -1,10 +1,12 @@
 package com.team6.rifflegroup.streamsavvy;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -16,12 +18,16 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -31,6 +37,7 @@ public class dataLayout extends AppCompatActivity {
     //support for gps
     private static final String TAG = dataLayout.class.getSimpleName();
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private static final String FILE_NAME = "curData.csv";
 
     private FusedLocationProviderClient mFusedLocationClient;
 
@@ -180,10 +187,53 @@ public class dataLayout extends AppCompatActivity {
     }
 
     //function that's called by the update button which saves the file then sends it via email to me
-    public void updateData(View view){
+    public void sendEmailData(View view){
+        String subject = "[RIFFLE DATA] date: ";
+        subject = subject.concat(inDate.toString());
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"a.daman.loo@gmail.com"});
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
 
+        //save data
+        saveData(this);
 
+        //finish and send email
+        File root = Environment.getExternalStorageDirectory();
+        File file = new File(root, FILE_NAME);
+        if(!file.exists() || !file.canRead()){
+            return;
+        }
+        Uri uri = Uri.fromFile(file);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
+    }
 
+    //function that saves values to a hardcoded file name
+    public void saveData(Context context){
+        try{
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            if(!root.exists()){
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, FILE_NAME);
+            FileWriter writer = new FileWriter(gpxfile);
+            String csv = "date,";
+            csv = csv.concat(inDate.toString());
+            csv = csv.concat(",lat,");
+            csv = csv.concat(mLatitudeLabel);
+            csv = csv.concat(",long,");
+            csv = csv.concat(mLongitudeLabel);
+            csv = csv.concat(",value,");
+            csv = csv.concat(inField.toString());
+            writer.append(csv);
+            writer.flush();
+            writer.close();
+            Toast.makeText(context, "Saved to file", Toast.LENGTH_SHORT).show();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
 }

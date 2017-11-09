@@ -15,4 +15,5 @@
     <string name="location_label">Location</string>
     <string name="data_label">Data</string>
     <string name="date_label">Date and Time</string>
+    <string name="email_label">Email Data</string>
 </resources>
