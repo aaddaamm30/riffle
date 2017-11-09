@@ -26,6 +26,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -38,6 +39,7 @@ public class dataLayout extends AppCompatActivity {
     private static final String TAG = dataLayout.class.getSimpleName();
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private static final String FILE_NAME = "curData.csv";
+    private static final String FILE_PATH = "temp/curData.csv";
 
     private FusedLocationProviderClient mFusedLocationClient;
 
@@ -200,7 +202,7 @@ public class dataLayout extends AppCompatActivity {
         saveData(this);
 
         //finish and send email
-        File root = Environment.getExternalStorageDirectory();
+        File root = Environment.getRootDirectory();
         File file = new File(root, FILE_NAME);
         if(!file.exists() || !file.canRead()){
             return;
@@ -210,8 +212,29 @@ public class dataLayout extends AppCompatActivity {
         startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
     }
 
+    public void saveHolder (View view){
+        saveData(this);
+    }
     //function that saves values to a hardcoded file name
     public void saveData(Context context){
+
+        String csv = "date,";
+        csv = csv.concat(inDate.toString());
+        csv = csv.concat(",lat,");
+        csv = csv.concat(mLatitudeLabel);
+        csv = csv.concat(",long,");
+        csv = csv.concat(mLongitudeLabel);
+        csv = csv.concat(",value,");
+        csv = csv.concat(inField.toString());
+
+        try {
+            FileOutputStream fOut = openFileOutput(FILE_NAME, MODE_PRIVATE);
+            fOut.write(csv.getBytes());
+            fOut.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        /*
         try{
             File root = new File(Environment.getExternalStorageDirectory(), "Notes");
             if(!root.exists()){
@@ -230,10 +253,11 @@ public class dataLayout extends AppCompatActivity {
             writer.append(csv);
             writer.flush();
             writer.close();
-            Toast.makeText(context, "Saved to file", Toast.LENGTH_SHORT).show();
+            showSnackbar(csv);
         }catch (IOException e){
             e.printStackTrace();
         }
+        */
     }
 
 }
