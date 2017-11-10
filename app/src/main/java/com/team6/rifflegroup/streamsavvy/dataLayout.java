@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.design.widget.Snackbar;
 import android.os.Bundle;
@@ -36,8 +36,6 @@ public class dataLayout extends AppCompatActivity {
     //support for gps
     private static final String TAG = dataLayout.class.getSimpleName();
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-    private static final String FILE_NAME = "curData.csv";
-    private static final String FILE_PATH = "temp/curData.csv";
 
     private FusedLocationProviderClient mFusedLocationClient;
 
@@ -51,6 +49,10 @@ public class dataLayout extends AppCompatActivity {
     private EditText inDate;
     private ListView lData;
     private Location location;
+
+    //file object to hold all riffle info
+    File theSpot = null;
+    private static final String FILE_NAME = "curData.csv";
 
     //on create set way to access UI and get LocationServices getLocation
     @Override
@@ -192,17 +194,45 @@ public class dataLayout extends AppCompatActivity {
         //save data
         saveData(this);
 
+        String csv = "date,";
+        csv = csv.concat(inDate.getText().toString());
+        csv = csv.concat(",lat,");
+        csv = csv.concat(mLatitudeLabel);
+        csv = csv.concat(",long,");
+        csv = csv.concat(mLongitudeLabel);
+        csv = csv.concat(",value,");
+        csv = csv.concat(inField.getText().toString());
+
+        FileOutputStream outputStream;
+
+        if(theSpot == null){
+            theSpot = new File(getFilesDir(), FILE_NAME);
+        }
+
+        try {
+            outputStream = new FileOutputStream(theSpot);
+
+            outputStream.write(csv.getBytes());
+            outputStream.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+
 
         String subject = "[RIFFLE DATA] date: ";
         subject = subject.concat(inDate.getText().toString());
-        File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), FILE_NAME);
-        Uri path = Uri.fromFile(filelocation);
+
+        Uri path = FileProvider.getUriForFile(this, getPackageName(), theSpot);
+
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         emailIntent.setType("vnd.android.cursor.dir/email");
         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"a.daman.loo@gmail.com"});
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
         emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
         emailIntent.putExtra(Intent.EXTRA_STREAM, path);
+
 
         startActivity(Intent.createChooser(emailIntent, "Send email..."));
 
