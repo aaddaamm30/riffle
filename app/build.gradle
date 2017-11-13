@@ -6,7 +6,6 @@ android {
 
     defaultConfig {
         applicationId "com.team6.rifflegroup.streamsavvy"
-        //applicationId "com.google.android.gms.location.sample.basiclocationsample"
         minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
