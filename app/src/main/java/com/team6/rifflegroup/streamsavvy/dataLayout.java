@@ -1,12 +1,10 @@
 package com.team6.rifflegroup.streamsavvy;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -17,7 +15,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,12 +24,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+
 
 
 public class dataLayout extends AppCompatActivity {
@@ -51,13 +48,13 @@ public class dataLayout extends AppCompatActivity {
     private EditText inField;
     private TextView textLocation;
     private EditText inDate;
-    private ListView lData;
     private Location location;
 
     //data file path and file and name
-    File dataPath = null;
-    File newData = null;
     private static final String FILE_NAME = "RiffleData.csv";
+
+    //email specs
+    private static final String EMAIL_ADDRESS = "a.daman.loo@gmail.com";
 
     //on create set way to access UI and get LocationServices getLocation
     @Override
@@ -74,7 +71,6 @@ public class dataLayout extends AppCompatActivity {
         inField = (EditText)findViewById(R.id.someString);
         textLocation = (TextView)findViewById(R.id.Location);
         inDate = (EditText)findViewById(R.id.inDate);
-        lData = (ListView)findViewById(R.id.listData);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
@@ -195,29 +191,23 @@ public class dataLayout extends AppCompatActivity {
     }
 
     //function that's called by the update button which saves the file then sends it via email to me
-    public void sendEmailData(View view){
+    public void sendEmailData(View view) {
 
         String csv = "date,";
         csv = csv.concat(inDate.getText().toString());
         csv = csv.concat(",lat,");
-        csv = csv.concat(mLatitudeLabel);
+        csv = csv.concat(Double.toString(location.getLatitude()));
         csv = csv.concat(",long,");
-        csv = csv.concat(mLongitudeLabel);
+        csv = csv.concat(Double.toString(location.getLongitude()));
         csv = csv.concat(",value,");
         csv = csv.concat(inField.getText().toString());
+        showSnackbar(csv);
+        //FileOperations fO = new FileOperations();
+        //fO.write(FILE_NAME,csv);
 
-        dataPath = new File(this.getFilesDir(), "xml");
-        newData = new File(dataPath, FILE_NAME);
-
-        //showSnackbar("into external storage check");
-
-        //if (isExternalStorageWritable()){return;}
-        ///showSnackbar("writablenigga");
-
-
-        //FileOutputStream outputStream = null;
-
-
+        File dataPath = new File(this.getFilesDir(), "xml");
+        File newData = new File(dataPath, FILE_NAME);
+        newData.mkdirs();
 
         try {
             FileWriter writer = new FileWriter(newData);
@@ -225,9 +215,7 @@ public class dataLayout extends AppCompatActivity {
             writer.flush();
             writer.close();
             Toast.makeText(this, "SAVED", Toast.LENGTH_SHORT).show();
-            //outputStream = new FileOutputStream(newData, this.);
-            //outputStream.write(csv.getBytes());
-            //outputStream.close();
+
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -242,60 +230,12 @@ public class dataLayout extends AppCompatActivity {
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         emailIntent.setType("vnd.android.cursor.dir/email");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"a.daman.loo@gmail.com"});
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {EMAIL_ADDRESS});
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
         emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
         emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
 
-        startActivityForResult(Intent.createChooser(emailIntent, "Send email..."), 1);
-
-    }
-
-    //check if writable
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        //Environment.ext
-        //showSnackbar(state);
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    //organize feedback
-    public File getStorageDir(String albumName) {
-        // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), albumName);
-        if (!file.mkdirs()) {
-            Log.e(TAG, "Directory not created");
-        }
-        return file;
-    }
-
-    public void saveHolder (View view){
-        saveData(this);
-    }
-
-    //function that saves values to a hardcoded file name
-    public void saveData(Context context){
-
-        String csv = "date,";
-        csv = csv.concat(inDate.toString());
-        csv = csv.concat(",lat,");
-        csv = csv.concat(mLatitudeLabel);
-        csv = csv.concat(",long,");
-        csv = csv.concat(mLongitudeLabel);
-        csv = csv.concat(",value,");
-        csv = csv.concat(inField.toString());
-
-        try {
-            FileOutputStream fOut = openFileOutput(FILE_NAME, MODE_PRIVATE);
-            fOut.write(csv.getBytes());
-            fOut.close();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        startActivity(Intent.createChooser(emailIntent, "Send email..."));
 
     }
 
