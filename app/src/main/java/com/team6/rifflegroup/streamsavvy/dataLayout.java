@@ -1,10 +1,13 @@
 package com.team6.rifflegroup.streamsavvy;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -14,6 +17,7 @@ import android.support.design.widget.Snackbar;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,7 +33,6 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
-
 
 
 public class dataLayout extends AppCompatActivity {
@@ -71,6 +74,15 @@ public class dataLayout extends AppCompatActivity {
         inField = (EditText)findViewById(R.id.someString);
         textLocation = (TextView)findViewById(R.id.Location);
         inDate = (EditText)findViewById(R.id.inDate);
+
+        inField.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                InputMethodManager datboi = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                datboi.showSoftInput(view, InputMethodManager.SHOW_FORCED);
+            }
+        });
+
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
@@ -201,12 +213,11 @@ public class dataLayout extends AppCompatActivity {
         csv = csv.concat(Double.toString(location.getLongitude()));
         csv = csv.concat(",value,");
         csv = csv.concat(inField.getText().toString());
-        showSnackbar(csv);
-        //FileOperations fO = new FileOperations();
-        //fO.write(FILE_NAME,csv);
+
 
         File dataPath = new File(this.getFilesDir(), "xml");
         File newData = new File(dataPath, FILE_NAME);
+
         newData.mkdirs();
 
         try {
@@ -223,9 +234,15 @@ public class dataLayout extends AppCompatActivity {
         String subject = "[RIFFLE DATA] date: ";
         subject = subject.concat(inDate.getText().toString());
 
-        Uri contentUri = FileProvider.getUriForFile(this, "com.team6.rifflegroup.streamsavvy.FileProvider", newData);
 
-        this.grantUriPermission(getPackageName(), contentUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        Uri fileUri = FileProvider.getUriForFile(this, "com.team6.rifflegroup.streamsavvy.FileProvider", newData);
+        //Uri fileUri = ;
+
+//        Cursor cursor = this.getContentResolver().query(contentUri, new String[] {},null,null,null);
+//        if(cursor.moveToFirst()){
+//            fileUri = Uri.parse(cursor.getString(0));
+//        }
+        this.grantUriPermission(getPackageName(), fileUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -233,10 +250,22 @@ public class dataLayout extends AppCompatActivity {
         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {EMAIL_ADDRESS});
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
         emailIntent.putExtra(Intent.EXTRA_TEXT, "File Attached");
-        emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
 
+        showSnackbar(fileUri.toString());
         startActivity(Intent.createChooser(emailIntent, "Send email..."));
 
     }
 
+    private String newRi(String fMe){
+        String champ = "file:/";
+        int last = fMe.lastIndexOf('v');
+        champ = champ.concat(fMe.substring(8, last + 1));
+        return champ;
+    }
+
+    //basic upload into drive (will probably crash
+//    private void uploadDrive (File file){
+//        File driveFile = driveService.files().create(file).setField("id").execute();
+//    }
 }
