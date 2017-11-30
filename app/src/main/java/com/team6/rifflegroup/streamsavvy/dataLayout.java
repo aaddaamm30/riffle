@@ -1,10 +1,13 @@
 package com.team6.rifflegroup.streamsavvy;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Environment;
@@ -18,7 +21,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,8 +38,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 
 public class dataLayout extends AppCompatActivity {
@@ -59,6 +69,14 @@ public class dataLayout extends AppCompatActivity {
     //email specs
     private static final String EMAIL_ADDRESS = "a.daman.loo@gmail.com";
 
+    //bluetooth specs
+    Button btButton;
+    private BluetoothAdapter BA;
+    private Set<BluetoothDevice> pairedDevices;
+    ListView lv;
+    private Button not_found;
+    private boolean registered = false;
+
     //on create set way to access UI and get LocationServices getLocation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +93,13 @@ public class dataLayout extends AppCompatActivity {
         textLocation = (TextView)findViewById(R.id.Location);
         inDate = (EditText)findViewById(R.id.inDate);
 
+        BA = BluetoothAdapter.getDefaultAdapter();
+        lv = (ListView)findViewById(R.id.btList);
+        btButton = (Button)findViewById(R.id.btButton);
+        not_found = (Button)findViewById(R.id.btNotFound);
+
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+
         inField.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
@@ -83,8 +108,20 @@ public class dataLayout extends AppCompatActivity {
             }
         });
 
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+    }
+
+    //bluetooth get devices button
+    public void listBT(View v){
+        pairedDevices = BA.getBondedDevices();
+
+        ArrayList list = new ArrayList();
+
+        for(BluetoothDevice bt : pairedDevices) list.add(bt.getName());
+        showSnackbar("Displaying paired devices");
+
+        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1,list);
+        lv.setAdapter(adapter);
     }
 
     //onstart
@@ -220,6 +257,10 @@ public class dataLayout extends AppCompatActivity {
 
         newData.mkdirs();
 
+
+        if(newData.canWrite()){
+            showSnackbar("nigga yeacan write");
+        }
         try {
             FileWriter writer = new FileWriter(newData);
             writer.append(csv);
@@ -236,11 +277,13 @@ public class dataLayout extends AppCompatActivity {
 
 
         Uri fileUri = FileProvider.getUriForFile(this, "com.team6.rifflegroup.streamsavvy.FileProvider", newData);
-        //Uri fileUri = ;
-
-//        Cursor cursor = this.getContentResolver().query(contentUri, new String[] {},null,null,null);
+//        Uri fileUri = null;
+//        String[] filePathColumn = {"somestring"};
+//        Cursor cursor = this.getContentResolver().query(contentUri, filePathColumn,null,null,null);
 //        if(cursor.moveToFirst()){
-//            fileUri = Uri.parse(cursor.getString(0));
+//
+//            fileUri = Uri.parse("file://" + cursor.getString(0));
+//
 //        }
         this.grantUriPermission(getPackageName(), fileUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -257,15 +300,56 @@ public class dataLayout extends AppCompatActivity {
 
     }
 
-    private String newRi(String fMe){
-        String champ = "file:/";
-        int last = fMe.lastIndexOf('v');
-        champ = champ.concat(fMe.substring(8, last + 1));
-        return champ;
-    }
-
     //basic upload into drive (will probably crash
 //    private void uploadDrive (File file){
 //        File driveFile = driveService.files().create(file).setField("id").execute();
 //    }
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                lv.setEnabled(false);
+                            }
+                        });
+                        showSnackbar("printsomething");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                addDevicesToList();
+                                lv.setEnabled(true);
+                            }
+                        });
+                        break;
+                }
+            }
+        }
+    };
+
+    private void addDevicesToList(){
+        pairedDevices = BA.getBondedDevices();
+
+        List<String> names = new ArrayList<>();
+        for (BluetoothDevice d : pairedDevices){
+            names.add(d.getName());
+        }
+
+        String[] array = names.toArray(new String[names.size()]);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, array);
+
+        lv.setAdapter(adapter);
+
+        not_found.setEnabled(true);
+    }
 }

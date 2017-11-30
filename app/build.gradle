@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.team6.rifflegroup.streamsavvy"
-        minSdkVersion 16
+        minSdkVersion 18
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"

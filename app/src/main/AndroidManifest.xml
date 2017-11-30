@@ -5,8 +5,14 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+
     <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -30,6 +36,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/paths"/>
         </provider>
+        <!--<fragment
+            android:name="com.team6.rifflegroup.streamsavvy.BT"
+            android:id="@+id/log_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" /> -->
     </application>
 
 </manifest>
